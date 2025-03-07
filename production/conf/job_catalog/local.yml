@@ -2,22 +2,23 @@ jobs:
   - name: data-cleaning
     __tracker_experiment_name: Mlflow-tracker
     stages:
+      - name: "fetching data"
+        tasks:
+          - name: "fetch-data"
+            params:
+              housing_url : https://raw.githubusercontent.com/ageron/handson-ml/master/datasets/housing/housing.tgz
+              housing_path : ${core.data_base_path}/raw/housing/
+
       - name: "clean-base-tables"
         tasks:
-          - name: "product"
-            params: {}
-          - name: "orders"
+          - name: "housing"
             params: {}
 
-      - name: "clean-derivative-tables"
-        tasks:
-          - name: "sales"
-            params: {}
       - name: "train-test-split"
         tasks:
           - name: "train-test"
             params:
-              target: unit_price
+              target: median_house_value
               test_size: 0.2
 
   - name: feat-engg
@@ -30,7 +31,7 @@ jobs:
               outliers:
                 method: mean
                 drop: False
-              sampling_fraction: 0.1
+              sampling_fraction:
 
   - name: model-gen
     __tracker_experiment_name: Mlflow-tracker

@@ -191,3 +191,5 @@ test.ipynb
 
 # inlcude the specific paths
 !src/ta_lib/_vendor/tigerml/core/reports/html/report_resources/*
+
+*.png

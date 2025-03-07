@@ -1,46 +1,51 @@
 jobs:
   - name: data-cleaning
+    __tracker_experiment_name: Mlflow-tracker
     stages:
-        - name: 'clean-base-tables'
-          tasks:
-            - name: 'product'
-              params: {}
-            - name: 'orders'
-              params: {}
-            
-        - name: 'clean-derivative-tables'
-          tasks:
-            - name: 'sales'
-              params: {}
-        - name: 'train-test-split'
-          tasks:
-            - name: 'train-test'
-              params:
-                target: unit_price,
-                test_size: 0.2
-              
+      - name: "fetching data"
+        tasks:
+          - name: "fetch-data"
+            params:
+              housing_url : https://raw.githubusercontent.com/ageron/handson-ml/master/datasets/housing/housing.tgz
+              housing_path : ${core.data_base_path}/raw/housing/
+
+      - name: "clean-base-tables"
+        tasks:
+          - name: "housing"
+            params: {}
+
+      - name: "train-test-split"
+        tasks:
+          - name: "train-test"
+            params:
+              target: median_house_value
+              test_size: 0.2
+
   - name: feat-engg
+    __tracker_experiment_name: Mlflow-tracker
     stages:
-        - name: 'feature-pipelines'
-          tasks:
-            - name: 'transform-features'
-              params: 
-                outliers: 
-                  method: percentile
-                  lb: 0.01
-                  ub: 0.99
-                  drop: True
+      - name: "feature-pipelines"
+        tasks:
+          - name: "transform-features"
+            params:
+              outliers:
+                method: mean
+                drop: False
+              sampling_fraction:
 
   - name: model-gen
+    __tracker_experiment_name: Mlflow-tracker
     stages:
-        - name: 'model-creation'
-          tasks:
-            - name: 'train-model'
-              params: {}
+      - name: "model-creation"
+        tasks:
+          - name: "train-model"
+            params:
+              sampling_fraction: 0.1
 
   - name: model-eval
+    __tracker_experiment_name: Mlflow-tracker
     stages:
-        - name: 'model-predict'
-          tasks:
-            - name: 'score-model'
-              params: {}
+      - name: "model-predict"
+        tasks:
+          - name: "score-model"
+            params: {}

@@ -15,49 +15,64 @@ from ta_lib.core.api import (
     DEFAULT_ARTIFACTS_PATH
 )
 from ta_lib.regression.api import SKLStatsmodelOLS
+from feature_engineering import transform_features
+import joblib
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint
 
 logger = logging.getLogger(__name__)
 
 
 @register_processor("model-gen", "train-model")
 def train_model(context, params):
-    """Train a regression model."""
+    """
+    Trains a Random Forest model with hyperparameter tuning on the training dataset.
+
+    Parameters
+    ----------
+    test_size: the split ratio
+    target_column : str, optional
+        The target column to predict (default: "median_house_value").
+    context : The context object
+    params : parameters, if any for the function to run
+
+    Returns
+    -------
+    RandomForestRegressor
+        The best Random Forest model from hyperparameter tuning.
+    """
     artifacts_folder = DEFAULT_ARTIFACTS_PATH
 
-    input_features_ds = "train/sales/features"
-    input_target_ds = "train/sales/target"
+    input_features_ds = "processed/housing/features"
+    input_target_ds = "processed/housing/target"
     
     # load training datasets
-    train_X = load_dataset(context, input_features_ds)
-    train_y = load_dataset(context, input_target_ds)
+    X_train = load_dataset(context, input_features_ds)
+    y_train = load_dataset(context, input_target_ds)
 
-    # load pre-trained feature pipelines and other artifacts
-    curated_columns = load_pipeline(op.join(artifacts_folder, "curated_columns.joblib"))
-    features_transformer = load_pipeline(op.join(artifacts_folder, "features.joblib"))
+    logging.info("Defining hyperparameter search space...")
+    param_distributions = {
+        "n_estimators": randint(50, 200),
+        "max_features": randint(2, 8),
+        "max_depth": randint(10, 50),
+    }
 
-    # sample data if needed. Useful for debugging/profiling purposes.
-    sample_frac = params.get("sampling_fraction", None)
-    if sample_frac is not None:
-        logger.warn(f"The data has been sample by fraction: {sample_frac}")
-        sample_X = train_X.sample(frac=sample_frac, random_state=context.random_seed)
-    else:
-        sample_X = train_X
-    sample_y = train_y.loc[sample_X.index]
-
-    # transform the training data
-    train_X = get_dataframe(
-        features_transformer.fit_transform(train_X, train_y),
-        get_feature_names_from_column_transformer(features_transformer),
+    model = RandomForestRegressor(random_state=42)
+    random_search = RandomizedSearchCV(
+        model,
+        param_distributions=param_distributions,
+        n_iter=20,
+        scoring="neg_mean_squared_error",
+        cv=5,
+        random_state=42,
+        n_jobs=-1,
     )
-    train_X = train_X[curated_columns]
-
-    # create training pipeline
-    reg_ppln_ols = Pipeline([("estimator", SKLStatsmodelOLS())])
-
-    # fit the training pipeline
-    reg_ppln_ols.fit(train_X, train_y.values.ravel())
-
-    # save fitted training pipeline
-    save_pipeline(
-        reg_ppln_ols, op.abspath(op.join(artifacts_folder, "train_pipeline.joblib"))
-    )
+    y_train = y_train.values.ravel()
+    logging.info("Starting hyperparameter tuning...")
+    random_search.fit(X_train, y_train)
+    best_model = random_search.best_estimator_
+    logging.info(f"Best model parameters: {random_search.best_params_}")
+    joblib.dump(best_model, op.abspath(op.join(artifacts_folder, "random_forest_model.pkl")))

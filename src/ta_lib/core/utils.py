@@ -384,7 +384,7 @@ def save_csv(df, path, *, fs=None, **kwargs):
 
     """
     fs = fs or fsspec.filesystem("file")
-    if fs.protocol == "file":
+    if "file" in fs.protocol:
         # FIXME: utility functions to robustify this
         fs.makedirs(op.dirname(path), exist_ok=True)
 

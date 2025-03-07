@@ -4,7 +4,7 @@ import pandas as pd
 from ._lib import DictObject
 
 MIN_CUTOFF_FOR_KEY_HEURISTIC = 90
-NA_VALUES = [np.NaN, pd.NaT, None, "NA"]
+NA_VALUES = [np.nan, pd.NaT, None, "NA"]
 SUMMARY_KEY_MAP = DictObject(
     {
         "variable_names": "Variable Name",

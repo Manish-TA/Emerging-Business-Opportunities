@@ -1,5 +1,6 @@
 import fnmatch
 import os
+import subprocess
 import os.path as op
 import platform
 import shutil
@@ -11,8 +12,8 @@ from invoke import Collection, UnexpectedExit, task
 
 # Some default values
 PACKAGE_NAME = "ta_lib"
-ENV_PREFIX = "ta-lib"
-ENV_PREFIX_PYSPARK = "ta-lib-pyspark"
+ENV_PREFIX = "mle-core"
+ENV_PREFIX_PYSPARK = "mle-core-pyspark"
 NUM_RETRIES = 10
 SLEEP_TIME = 1
 
@@ -113,7 +114,37 @@ def get_package_version(source_folder):
         exec(fp.read(), ns, ns)
         package_version = ns["version"]
         return package_version
+# ----------
+# radon task
+# ----------
 
+@task(name="radon")
+def radon_metrics(c, platform=PLATFORM, env=DEV_ENV, path="."):
+    """Run Radon to calculate code complexity and maintainability index on the project files."""
+
+    source_code_path = os.path.abspath(path)
+
+    try:
+        c.run("radon --help", hide=True)
+    except Exception as e:
+        print("Radon is not installed. Please install it using 'pip install radon'.")
+        raise e
+    
+    print(f"Running Radon metrics analysis on source code at {source_code_path}")
+    
+    # Cyclomatic Complexity (CC)
+    c.run(f"radon cc {source_code_path} -a")
+    
+    # Raw Metrics (lines of code, comments, etc.)
+    c.run(f"radon raw {source_code_path} -a")
+    
+    # Maintainability Index (MI)
+    c.run(f"radon mi {source_code_path} -a")
+    
+    # Halstead Metrics
+    c.run(f"radon hal {source_code_path} -a")
+
+_create_task_collection("radon", radon_metrics)
 
 # ---------
 # debug tasks
@@ -263,7 +294,7 @@ def _setup_env_common(c, env_name, platform=PLATFORM, env=DEV_ENV, force=False, 
     """
     force_flag = "" if not force else "--yes"
 
-    env_file = op.abspath(op.join(PIP_REQ_FOLDER, f"ct-core-{env}.txt"))
+    env_file = op.abspath(op.join(PIP_REQ_FOLDER, f"mle-core-{env}.txt"))
 
     if not op.isfile(env_file):
         raise ValueError(f"""The conda env file is not found : "{env_file}" """)
@@ -294,7 +325,7 @@ def _setup_env_common_usecase(c, env_name, platform=PLATFORM, env=DEV_ENV, force
     """
     force_flag = "" if not force else "--force"
 
-    env_file = op.abspath(op.join(CONDA_ENV_FOLDER, f"ct-core-{env}.yml"))
+    env_file = op.abspath(op.join(CONDA_ENV_FOLDER, f"mle-core-{env}.yml"))
 
     if not op.isfile(env_file):
         raise ValueError(f"""The conda env file is not found : "{env_file}" """)
@@ -398,7 +429,7 @@ def setup_env_pyspark(c, platform=PLATFORM, env=DEV_ENV, force=False, python_ver
     # different environments
     force_flag = "" if not force else "--force"
 
-    env_file = op.abspath(op.join(PIP_REQ_FOLDER, f"ct-core-{env}.txt"))
+    env_file = op.abspath(op.join(PIP_REQ_FOLDER, f"mle-core-{env}.txt"))
     usecase_file = op.abspath(op.join(PIP_REQ_FOLDER, f"ct-pyspark-{env}.txt"))
 
     # req_file = op.abspath(
@@ -909,7 +940,7 @@ def validate_env(
     env_name = _get_env_name(env)
 
     # for core packages
-    env_files = [op.join(PIP_REQ_FOLDER, f"ct-core-{env}.txt")]
+    env_files = [op.join(PIP_REQ_FOLDER, f"mle-core-{env}.txt")]
 
     # addon files check
     addon_list = []
@@ -1054,7 +1085,6 @@ def build_docs(c, platform=PLATFORM, env=DEV_ENV, regen_api=True, update_credits
 
 
 _create_task_collection("build", build_docs)
-
 
 # -----------
 # Launch stuff

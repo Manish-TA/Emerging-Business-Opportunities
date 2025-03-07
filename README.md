@@ -1,6 +1,25 @@
-# Sales price prediction
+# Housing Price Prediction
 
-Use regression to predict price of electronic devices
+## Running and Launching experiment tracker
+Follow the next sections to setup the environemnt and come back here to run the experiment.
+#### Launching the MLFlow server
+Run `inv launch.tracker-ui` to launch the server to track the experiemnts
+#### Run the experiments
+Example usage:  
+`python production/cli.py job run --job-id data-cleaning`  
+to run the data-cleaning job  
+
+To run all the jobs in one go
+`python production/cli.py job run`  
+The default value for --job-id is all, so it runs all the jobs defined in job config.   
+
+Go through the regression code template documentation for more clear instructions  
+https://tigeranalytics-code-templates.readthedocs-hosted.com/en/latest/code_templates/project_config.html
+
+    Note: mle-core-dev is the core env file which we are using.
+    
+## Environment Setup Instructions
+Use regression to predict price of houses
 
 Tip: If you don't have markdown viewer like atom, you can render this on chrome by following [this link](https://imagecomputing.net/damien.rohmer/teaching/general/markdown_viewer/index.html).
 
