@@ -9,16 +9,20 @@ Project Folder Structure
 The directories in the project are organized in the following for easy maintainability and faster productionizing :
 
 
-.. _config_folder:
 
-.. figure:: ../images/project_structure.png
-   :width: 200px
-   :height: 200px
-   :alt: Project Structure
-   :name: Project Structure
-   :align: center
-   
+.. code-block:: bash
 
+    ├── artifacts
+    ├── data
+    ├── deploy
+    ├── docs
+    ├── logs
+    ├── notebooks
+    ├── production
+    ├── src
+    │   └── ta_lib
+    └── tests
+        └── test_*.py
 
 The description of the folder structure is as follows.
     
@@ -37,3 +41,5 @@ The description of the folder structure is as follows.
 7. ``production`` - Production scripts that are either put on schedule or executed manually will be part of this directory. This directory has codes from ``notebooks`` folder which essentially does jobs like data ingestion, model training, model scoring etc.
 
 8. ``src\ta_lib`` - All reusable code is goes here which has all the common utilities for ``notebooks`` and ``production`` folders. This source code includes programs for IO read and write for file systems in project like s3, gcs or dbfs and utilities for data processing, feature transformations, reports for eda, model evaluation etc..
+
+8. ``tests`` - All test cases for the project. Can run using pytest.

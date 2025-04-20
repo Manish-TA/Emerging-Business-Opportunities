@@ -345,6 +345,26 @@ def load_parquet(path, *, fs=None, **kwargs):
         # FIXME: can be pandas or spark
         return pd.read_parquet(fp, **kwargs)
 
+def load_excel(path, *, fs=None, **kwargs):
+    """Load a parquet file from the file system as specified in the path variable.
+
+    Parameters
+    ----------
+    path : string
+        Absolute or relative filepath, URL (may include protocols like
+        ``s3://``).
+    fs : fsspec.filesystem, optional
+        Filesystem of the url, by default ``None``
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe load from the input parquet path
+    """
+    fs = fs or fsspec.filesystem("file")
+    with fs.open(path, mode="rb") as fp:
+        # FIXME: can be pandas or spark
+        return pd.read_excel(fp, **kwargs)
 
 def save_parquet(df, path, *, fs=None, **kwargs):
     """Save a parquet file in the fs as specified in the path variable.
@@ -418,6 +438,8 @@ def load_data(path, *, fs=None, **kwargs):
         return load_parquet(path, fs=fs, **kwargs)
     elif path.endswith(".csv"):
         return load_csv(path, fs=fs, **kwargs)
+    elif path.endswith(".xlsx"):
+        return load_excel(path, fs=fs, **kwargs)
     else:
         raise NotImplementedError()
 

@@ -5,49 +5,52 @@ from ta_lib.core.api import (get_dataframe,
                              get_feature_names_from_column_transformer,
                              get_package_path, hash_object, load_dataset,
                              load_pipeline, register_processor, save_dataset, DEFAULT_ARTIFACTS_PATH)
-from scripts import CombinedAttributesAdder
 import joblib
 import mlflow
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
+import logging
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+
+logger = logging.getLogger(__name__)
 
 @register_processor("model-eval", "score-model")
-def score_model(context, params):   
+def score_model(context, params):
     """
-    Loads a trained model and evaluates it on a dataset.
+    Scores a trained regression model using test data and logs evaluation metrics.
+
+    This processor:
+    - Loads the test feature set and target variable from the data store.
+    - Loads the trained model pipeline from the artifacts directory.
+    - Generates predictions using the test set.
+    - Calculates the Mean Absolute Percentage Error (MAPE).
+    - Logs the MAPE value for evaluation.
+    - Saves the prediction results to the score directory.
 
     Parameters
     ----------
-    context : The context object
-    params : parameters, if any for the function to run
+    context : object
+        A custom context object used to load and save datasets and pipelines.
+    params : dict
+        Optional parameters for extension. Currently unused.
 
     Returns
     -------
-    float
-        Root Mean Squared Error (RMSE) on the dataset.
+    None
+        The function saves the predictions to "score/FnB/output" and logs MAPE.
     """
-    input_features_ds = "test/housing/features"
-    input_target_ds = "test/housing/target"
-    output_ds = "score/housing/output"
+    output_ds = "score/FnB/output"
+
+    X_test = load_dataset(context, "test/FnB/features")
+    y_test = load_dataset(context, "test/FnB/target")
     
     artifacts_folder = DEFAULT_ARTIFACTS_PATH
 
-    # load test datasets
-    test_X = load_dataset(context, input_features_ds)
-    test_y = load_dataset(context, input_target_ds)
-
-    # load the feature pipeline and training pipelines
-    features_transformer = load_pipeline(op.join(artifacts_folder, "preprocessor.pkl"))
-    model_pipeline = load_pipeline(op.join(artifacts_folder, "random_forest_model.pkl"))
-
-    # transform the test dataset
-    test_X = features_transformer.transform(test_X)
-
-    # make a prediction
-    predictions = model_pipeline.predict(test_X)
-    rmse = np.sqrt(mean_squared_error(test_y, predictions))
-    print(rmse)
-    # store the predictions for any further processing.
+    model_pipeline = load_pipeline(op.join(artifacts_folder, "linear_model.pkl"))
+    predictions = model_pipeline.predict(X_test)
+    mape = mean_absolute_percentage_error(y_test, predictions) * 100
+    print(f"MAPE: {mape:.4f}%")
+    logger.info(f"MAPE: {mape:.4f}%")
     predictions = pd.DataFrame(predictions)
     save_dataset(context, predictions, output_ds)
+    logger.info("Saved the test predictions to test directory")

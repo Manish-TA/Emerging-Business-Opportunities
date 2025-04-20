@@ -1,5 +1,5 @@
 =================
-API Documentation
+Documentation
 =================
 
 .. toctree::
@@ -7,4 +7,5 @@ API Documentation
    :maxdepth: 2
 
    api/ta_lib.rst
+   modules.rst
    

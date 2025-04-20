@@ -7,7 +7,10 @@ import numpy as np
 import os
 import tarfile
 import urllib
+import gc
+import logging
 import pandas as pd
+from datetime import timedelta
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from ta_lib.core.api import (
@@ -18,110 +21,109 @@ from ta_lib.core.api import (
     string_cleaning
 )
 
+logger = logging.getLogger(__name__)
 
-@register_processor("data-cleaning", "fetch-data")
-def fetch_housing_data(context, params):
+@register_processor("data-cleaning", "clean-fnb")
+def fetch_clean_fnb_data(context, params):
     """
-    Downloads and extracts the housing data from the specified URL.
+    Cleans raw F&B datasets and saves cleaned versions to the cleaned directory.
+
+    This function loads multiple raw datasets (sales, social media, Google search, 
+    theme-product relationships, etc.), applies cleaning steps such as renaming, 
+    formatting dates, removing duplicates, handling missing values, and standardizing 
+    column names. The cleaned datasets are saved for use in later steps like 
+    feature engineering and modeling.
 
     Parameters
     ----------
-    housing_url : str
-        URL of the housing data tar file.
-    housing_path : str
-        Directory where the raw housing data will be saved and extracted.
+    context : object
+        A custom context object used to load and save datasets.
+    params : dict
+        Optional parameters for future extension. Currently unused.
 
-    Raises
-    ------
-    Exception
-        If there is an error during downloading or extraction.
+    Returns
+    -------
+    None
+        The cleaned datasets are saved to the 'cleaned/FnB/' directory using the 
+        context's save_dataset method.
     """
-    housing_url = params["housing_url"]
-    housing_path = params["housing_path"]
-    os.makedirs(housing_path, exist_ok=True)
-    tgz_path = os.path.join(housing_path, "housing.tgz")
-    urllib.request.urlretrieve(housing_url, tgz_path)
-    with tarfile.open(tgz_path) as housing_tgz:
-        housing_tgz.extractall(path=housing_path)
+    logger.info("Loading datasets......")
 
-
-
-@register_processor("data-cleaning", "housing")
-def clean_table(context, params):
-    """
-    Clean the data in housing table
-    """
-
-    input_dataset = "raw/housing"
-    output_dataset = "cleaned/housing"
-
-    # load dataset
-    product_df = load_dataset(context, input_dataset)
-
-    product_df_clean = (
-        product_df
-    )
-    # save the dataset
-    save_dataset(context, product_df_clean, output_dataset)
-
-@register_processor("data-cleaning", "train-test")
-def create_training_datasets(context, params):
-    """
-    Splits the housing dataset into training and validation sets using
-    StratifiedShuffleSplit to ensure similar income category distributions.
-
-    Parameters
-    ----------
-    housing_path : str
-        Path to the directory containing the raw housing data file (CSV).
-    output_dir : str
-        Directory where the processed training and validation data will be saved.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the input dataset file is not found.
-    """
-    input_dataset = "cleaned/housing"
-    output_train_features = "train/housing/features"
-    output_train_target = "train/housing/target"
-    output_test_features = "test/housing/features"
-    output_test_target = "test/housing/target"
+    sales_data = load_dataset(context, "raw/FnB/sales_data")
+    social_media_data = load_dataset(context, "raw/FnB/social_media_data")
+    google_search_data = load_dataset(context, "raw/FnB/google_search_data")
+    Theme_product_list = load_dataset(context, "raw/FnB/theme_product_list")
+    Theme_list = load_dataset(context, "raw/FnB/theme_list")
+    product_manufacturer_list = load_dataset(context, "raw/FnB/product_manufacturer_list")
     
-    # load dataset
-    data = load_dataset(context, input_dataset)
+    logger.info("Loaded datasets from raw directory")
 
-    data["income_cat"] = pd.cut(
-        data["median_income"],
-        bins=[0.0, 1.5, 3.0, 4.5, 6.0, np.inf],
-        labels=[1, 2, 3, 4, 5],
+    sales_data_clean = (
+        sales_data
+        .copy()
+        .change_type(['sales_dollars_value'], np.int64)
+        .to_datetime('system_calendar_key_N', format='%Y%m%d')
+        .rename_columns({'system_calendar_key_N': 'date'})
+        .clean_names(case_type='snake')
     )
 
-    strat_split = StratifiedShuffleSplit(n_splits=1, test_size=params["test_size"], random_state=42)
-    for train_index, val_index in strat_split.split(data, data["income_cat"]):
-        train_set = data.loc[train_index].drop("income_cat", axis=1)
-        val_set = data.loc[val_index].drop("income_cat", axis=1)
-
-
-    # split train dataset into features and target
-    target_col = params["target"]
-    train_X, train_y = (
-        train_set
-        # split the dataset to train and test
-        .get_features_targets(target_column_names=target_col)
+    social_media_data_clean = (
+        social_media_data
+        .copy()
+        .replace({'': np.NaN})
+        .dropna(axis = 0)
+        .change_type(['Theme Id'], np.int64)
+        .to_datetime('published_date')
+        .rename_columns({'Theme Id': 'claim_id' ,'published_date' : 'date' } )                                                                                                                               
+        .clean_names(case_type='snake')
+        .drop_duplicates()
     )
 
-    # save the train dataset
-    save_dataset(context, train_X, output_train_features)
-    save_dataset(context, train_y, output_train_target)
-
-    # split test dataset into features and target
-    test_X, test_y = (
-        val_set
-        # split the dataset to train and test
-        .get_features_targets(target_column_names=target_col)
+    theme_product_list_clean= (
+        Theme_product_list
+        .copy()                                                                                                                               
+        .clean_names(case_type='snake')
     )
 
-    # save the datasets
-    save_dataset(context, test_X, output_test_features)
-    save_dataset(context, test_y, output_test_target)
+    product_manufacturer_list_clean = (
+        product_manufacturer_list
+        .copy()
+        .drop(['Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6'], axis=1)                                                                                                               
+        .clean_names(case_type='snake')
+    )
+
+    theme_list_clean = (
+        Theme_list
+        .copy()
+        .passthrough()    
+        .replace({'': np.NaN})
+        .clean_names(case_type='snake')
+    )
+
+    google_search_data_clean = (
+        google_search_data
+        .copy()
+        .replace({'': np.NaN})
+        .to_datetime('date', format='%d-%m-%Y')
+        .sort_values(by=['searchVolume'],ascending=False)
+        .rename_columns({'year_new' : 'year'})
+        .drop_duplicates(subset = ['date' , 'Claim_ID' , 'platform'],keep = 'first').reset_index(drop = True)
+        .clean_names(case_type='snake')    
+    )
+
+    logger.info("All datasets are cleaned and stored in cleaned directory")
+
+    save_dataset(context, sales_data_clean, "cleaned/FnB/sales_data")
+    save_dataset(context, social_media_data_clean, "cleaned/FnB/social_media_data")
+    save_dataset(context, google_search_data_clean, "cleaned/FnB/google_search_data")
+    save_dataset(context, theme_product_list_clean, "cleaned/FnB/theme_product_list")
+    save_dataset(context, theme_list_clean, "cleaned/FnB/theme_list")
+    save_dataset(context, product_manufacturer_list_clean, "cleaned/FnB/product_manufacturer_list")
+
+    del (
+        sales_data, social_media_data, google_search_data, Theme_product_list, 
+        Theme_list, product_manufacturer_list, 
+        sales_data_clean, social_media_data_clean, google_search_data_clean, 
+        theme_product_list_clean, theme_list_clean, product_manufacturer_list_clean
+    )
+    gc.collect()

@@ -2,7 +2,6 @@
 Developer Guide
 ===============
 
-Guide for developers at Tiger. Setting up a development environment in various operating systems, Python 3 specific code examples that illustrate best practices and build code pipelines are provided here.
 
 
 

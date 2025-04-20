@@ -31,10 +31,17 @@ handlers:
         encoding: utf8
         formatter: default
 
+# root:
+#     level: WARN
+#     handlers:
+#         - info_file_handler
+
 root:
-    level: WARN
+    level: INFO
     handlers:
         - info_file_handler
+        - error_file_handler
+        - console_handler
 
 loggers:
     ta_lib:
@@ -45,6 +52,13 @@ loggers:
             - console_handler
         propagate: no
     tigerml:
+        level: INFO
+        handlers:
+            - info_file_handler
+            - error_file_handler
+            - console_handler
+        propagate: no
+    production:
         level: INFO
         handlers:
             - info_file_handler

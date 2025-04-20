@@ -1,168 +1,230 @@
-*****************
-Environment Setup
-*****************
+==========================
+Environment Setup Guide
+==========================
 
-This chapter deals with installing certain prerequisites to set up the 
-development environment and learn some crucial tools that would make us productive.
+Pre-requisites
+=================
 
-Shell Environment
------------------
+1. **Miniconda**  
+   Ensure you have **Miniconda** installed and accessible from your shell. If not, download it here: https://docs.conda.io/en/latest/miniconda.html
 
-A Shell provides us with an interface to the Unix system. Unix Shell is an environment in which we can run our commands, programs, and shell scripts. To set up a full fledged UNIX/Linux environment in Windows, we may either need 
-softwares like **Ubuntu App/ GIT Bash** or Install a **virtual machine** with the Linux Operating system, however, the latter consumes a lot of resources when not backed by powerful high performance computer.
+   .. note::
+      If you already have Anaconda installed, you can skip this step.  
+      If `conda` is not recognized in the shell, run::
 
+         conda init
 
-Ubuntu App
-^^^^^^^^^^
+2. **Git**  
+   Ensure `git` is installed and accessible from your shell.
 
-The Ubuntu App is freely available to be installed in Windows on our laptops. Perfect for file management, development, remote administration, and a thousand other tasks, this is an excellent tool one can resort to for day-to-day activities.
+   .. note::
+      If you installed Git Bash or GitHub Desktop, `git` CLI might not be available from your default shell. In that case, add the path to `git.exe` to your system path:
 
-.. image:: ../images/ubuntu.png
-    :width: 400px
-    :align: left
-    :height: 550px
-    :alt: Ubuntu App
+      - ``%LOCALAPPDATA%\Programs\Git\git-bash.exe``
+      - ``%LOCALAPPDATA%\GitHubDesktop\app-<ver>\resources\app\git\mingw64\bin\git.exe``
 
-.. note:: You will need to enable **Windows Subsystem for Linux** on your window laptops using these steps:
-    
-    1. Open `Turn Windows features on or off`
-    2. Check the `Windows Subsystem for Linux` option
+3. **Python Packages (Invoke and PyYAML)**  
+   Run the following in your base Conda environment:
 
-        .. image:: ../images/enable_wsl.png
-            :width: 250px
-            :height: 200px
-            :alt: Enable WSL
-        
-    3. Click the `OK button and the Restart now` button
+   .. code-block:: bash
 
-Once installed, in the Linux system, Edit/Create (if it doesn't exist) the file ``/etc/wsl.conf`` and add the following content
-::
+      (base)$ pip install invoke
+      (base)$ pip install pyyaml
 
+Getting Started
+===========================
 
-    [automount]
-    root = /
-    options = "metadata"
-
-The above configuration ensures that your windows filesystems like **C:\\**, **D:\\** are mounted at **/c** and **/d** respectively on the linux filesystem.
-This is particularly important for some software like Docker to work effectively.
-
-.. seealso:: 
-    1. Refer to the `WSL Configuration <https://docs.microsoft.com/en-us/windows/wsl/wsl-config>`__ for detailed information.  
-    2. The instructions stated above are for WSL1. See `<https://docs.microsoft.com/en-us/windows/wsl/compare-versions>`__ for comparing the features between versions.
-
-GIT Bash
-^^^^^^^^
-
-Git Bash is a source control management system for Windows. Git Bash is not a GUI software, it is a command-line prompt. It is used to write and run commands on the terminal.
-**Download** GIT Bash from `here <https://gitforwindows.org/>`__ 
-
-.. warning:: Although both Ubuntu App and GIT Bash can be used for Linux Environment, Ubuntu App is preferred over GIT Bash
-
-Visual Studio Code
-------------------
-
-`Visual Studio Code IDE <https://code.visualstudio.com/>`__ is a free, lightweight, open source IDE, with support for Mac, Windows, and Linux.
-
-Version Control
----------------
-**GIT** is a version control system for tracking changes in computer files and coordinating work on those files among multiple people. 
-If you are using windows, download and install git `here <https://git-scm.com/download/>`__. If you are using Linux or Mac, you can do 
-
-.. code-block:: console
-
-   $ sudo apt-get install git
-
-.. note:: 
-    1. If you have already installed Git Bash or Git Desktop but the git cli is not accessible by default from cmdline.
-    Then, you can add the path to git.exe to your system path. Here are the paths on a recent setup
-    ::
-        
-        %LOCALAPPDATA%\Programs\Git\git-bash.exe
-        %LOCALAPPDATA%\GitHubDesktop\app-<ver>\resources\app\git\mingw64\bin\git.exe
-
-    2. Ensure that a **Tiger Analytics** GITHub account is created. If not, collaborate with the **IT Team** to get it done.
-
-.. _miniconda-setup:
-
-Miniconda
----------
-
-Install **Miniconda** on your Ubuntu app by following the below link `<https://docs.conda.io/en/latest/miniconda.html>`__
+Switch to the root folder (i.e., the folder containing this file).
 
 .. note::
 
-    * If you already have `Anaconda` installed, please still go ahead and install Miniconda and use it for development.
-    * If conda command is not in your path, you can configure your shell by running ``conda init``
+   Make sure there are **no spaces** in the folder path. Environment setup will fail if spaces are present.
 
-.. _putty-setup:
+To view available automation tasks:
 
-Putty
------
+.. code-block:: bash
 
-PuTTY is a common utility to connect to remote linux servers
+   (base)~/<proj-folder>$ inv -l
 
-Pre-requisites
-^^^^^^^^^^^^^^
+To verify pre-requisites:
 
-- You should have putty.exe. You can download it `here <https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html>`__. Get 64 bit putty.exe from "Alternative binary files" section.
-- Get the Public IP address & ppk key file for your instance from IT Helpdesk
+.. code-block:: bash
 
-Setup
-^^^^^
+   (base)~/<proj-folder>$ inv debug.check-reqs
 
-- Double click on putty. You should get something like the below image.
+No error messages should appear.
 
-.. figure:: ../images/env_setup/02_putty_session.png
-        :align: center
-        :alt: putty_session
+Environment Architecture
+===========================
 
-        Putty session
+The environment is divided into two parts:
 
-- In the Host Name text box type `ubuntu@\<yourip>` .
-- On the left panel navigate to Connection -> SSH -> Auth and browse for ppk file. Refer below image.
+1. **Core** (must-have):  
+   Installed by default via::
 
-.. figure:: ../images/env_setup/03_putty_key.jpg
-        :align: center
-        :alt: 03_putty_key
+   - `deploy/pip/ct-core-dev.txt`
+   - `deploy/conda_envs/ct-core-dev.yml`
 
-        Putty authentication
+2. **Addons** (optional):  
+   You can choose from:
 
-- On the left panel navigate to Session.
-- In the text box below Saved Sessions, give it a name like AutoML and click save.
+   - **formatting**: Code styling tools
+   - **documentation**: Docstring and `.rst` documentation generation
+   - **testing**: Test automation
+   - **jupyter**: Notebook support with enhancements
+   - **extras**: Nice-to-have utilities
+   - **ts**: Time-series modeling tools
+   - **pyspark**: PySpark support
 
-.. _winscp-setup:
+Edit the following files to customize:
 
-WinSCP
-------
+- ``deploy/pip/addon-<addon-name>-dev.txt``
 
-WinSCP is a common utility to copy files to and from remote linux servers
+.. important::
 
-Pre-requisties
-^^^^^^^^^^^^^^
+   Use a **single shared environment file** for your team to ensure consistency.
 
-- You can download the portalbe version of WinSCP from `here <https://winscp.net/eng/downloads.php>`__.
-- Get the Public IP address & ppk key file for your instance from IT Helpdesk / project leads
+Recommended Setup (Core + Addons)
+==========================================
 
-Setup
-^^^^^
+.. tip::
 
-- Double click on WinSCP.exe (~18 MB file). Refer to image below.
+   Default environment name is ``ta-lib-dev``. You can customize it (e.g., ``env-myproject-prod``) by editing ``ENV_PREFIX`` in `tasks.py`.
 
-.. figure:: ../images/env_setup/04_WINSCP_session.png
-        :align: center
-        :alt: 04_WINSCP_session
+To set up the core environment:
 
-        WINSCP session
+.. code-block:: bash
 
-- In the Host Name text box type <yourip>.
-- In the User name text box type ubuntu.
-- Click on advanced. Then navigate to SSH -> Authentication. Refer below image.
-- In the box below private key, browse for ppk file
+   (base)~/<proj-folder>$ inv dev.setup-env --usecase=<specific-usecase>
 
-.. figure:: ../images/env_setup/05_WINSCP_key.png
-        :align: center
-        :alt: 05_WINSCP_key
+This installs the core environment along with project dependencies.
 
-        WINSCP authentication
+.. note::
 
-- Click ok on the advanced tab. Then click Save. In the popup window give it an appropriate name.
+   Supported usecases: ``tpo``, ``mmx``, ``ebo``, ``rtm``, ``reco``
+
+Install environment without usecase and specify Python version:
+
+.. code-block:: bash
+
+   (base)~/<proj-folder>$ inv dev.setup-env --python-version=3.9
+
+.. note::
+
+   Supported versions: ``3.8``, ``3.9``, ``3.10`` (default is 3.10)
+
+Activate the environment:
+
+.. code-block:: bash
+
+   (base)~/<proj-folder>$ conda activate ta-lib-dev
+
+Install Invoke and PyYAML again in the new environment:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ pip install invoke
+   (ta-lib-dev)$ pip install pyyaml
+
+Install all addons:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv dev.setup-addon --formatting --jupyter --documentation --testing --extras --ts
+
+Check environment info:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv dev.info
+
+Validate your installation:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv test.val-env --usecase=<specific-usecase>
+
+Validate addon installations:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv test.val-env --formatting --jupyter --documentation --testing --extras --ts --pyspark
+
+Manual Environment Setup
+==============================
+
+If the automated setup (`invoke`) fails, use the manual process:
+
+1. **Create Conda Environment**
+
+   .. code-block:: bash
+
+      (base)$ conda create --name <env_name> python=<python_version>
+
+2. **Activate Environment**
+
+   .. code-block:: bash
+
+      (base)$ conda activate <env_name>
+
+3. **Install Core Packages**
+
+   .. code-block:: bash
+
+      (<env_name>)$ pip install -r deploy/pip/ct-core-dev.txt
+
+4. **Install Local Code**
+
+   .. code-block:: bash
+
+      (<env_name>)$ pip install -e .
+
+5. **Install Usecase-specific Packages**
+
+   .. code-block:: bash
+
+      (<env_name>)$ pip install -r deploy/pip/ct-<usecase>-dev.txt
+
+6. **Install Addons (Optional)**
+
+   .. code-block:: bash
+
+      (<env_name>)$ pip install -r deploy/pip/addon-jupyter-dev.txt
+
+Cloud Environment Setup
+==============================
+
+If `invoke` is not available in your cloud workspace, follow the manual steps above or refer to:  
+**[Cloud Environment Setup Guide](<insert-cloud-guide-link>)**
+
+Launching Jupyter Notebooks
+==============================
+
+To start a local Jupyter Lab server:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv launch.jupyterlab
+
+Open your browser and go to: http://localhost:8080
+
+You can view options via help:
+
+.. code-block:: bash
+
+   (ta-lib-dev)$ inv launch.jupyterlab --help
+
+Available options:
+
+- ``--password=<str>``
+- ``--env=<str>``
+- ``--ip=<str>``
+- ``--port=<int>``
+- ``--platform=<str>``
+- ``--token=<str>``
+
+Frequently Asked Questions
+==============================
+
+Refer to the official FAQ for help with code template setup, testing, and adoption across phases:  
+**[Code Template FAQ](https://tigeranalytics-code-templates.readthedocs-hosted.com/en/latest/faq.html)**

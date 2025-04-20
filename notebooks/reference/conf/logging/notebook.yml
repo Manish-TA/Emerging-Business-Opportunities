@@ -6,29 +6,62 @@ formatters:
     default:
         format: "%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
-    simple:
-        format: "%(message)s"
 
 handlers:
     console_handler:
         class: logging.StreamHandler
-        level: DEBUG
-        formatter: simple
+        level: ERROR
+        formatter: default
+
+    info_file_handler:
+        class: logging.handlers.TimedRotatingFileHandler
+        level: INFO
+        filename: ${core.log_base_path}/info.log
+        when: 'midnight'
+        backupCount: 4
+        encoding: utf8
+        formatter: default
+
+    error_file_handler:
+        class: logging.handlers.TimedRotatingFileHandler
+        level: ERROR
+        filename: ${core.log_base_path}/error.log
+        when: 'midnight'
+        backupCount: 4
+        encoding: utf8
+        formatter: default
+
+# root:
+#     level: WARN
+#     handlers:
+#         - info_file_handler
 
 root:
-    level: WARN
+    level: INFO
     handlers:
+        - info_file_handler
+        - error_file_handler
         - console_handler
-    propagate: yes
-    
+
 loggers:
     ta_lib:
-        level: WARN
+        level: INFO
         handlers:
+            - info_file_handler
+            - error_file_handler
             - console_handler
-        propagate: yes
+        propagate: no
     tigerml:
-        level: WARN
+        level: INFO
         handlers:
+            - info_file_handler
+            - error_file_handler
             - console_handler
-        propagate: yes
+        propagate: no
+    production:
+        level: INFO
+        handlers:
+            - info_file_handler
+            - error_file_handler
+            - console_handler
+        propagate: no

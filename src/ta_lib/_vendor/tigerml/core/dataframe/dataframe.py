@@ -186,9 +186,9 @@ class DataFrame(BackendMixin):
         """Returns data description."""
         if self.backend == BACKENDS.dask:
             return self._data.describe(
-                datetime_is_numeric=True, *args, **kwargs
+                *args, **kwargs
             ).compute()
-        return self._data.describe(datetime_is_numeric=True, *args, **kwargs)
+        return self._data.describe(*args, **kwargs)
 
     def corr(self):
         """Returns correlation matrix."""

@@ -1,9 +1,9 @@
-.. Project_X documentation master file, created by
+.. Emerging Business Opportunities documentation master file, created by
    sphinx-quickstart on Fri Jul  3 12:53:59 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Project_X documentation!
+Welcome to Emerging Business Opportunities documentation!
 ===================================
 
 .. toctree::
@@ -14,7 +14,7 @@ Welcome to Project_X documentation!
    developer_guide
    api_guide
    user_guide
-   best_practices
+   .. best_practices
 
 
 Indices and tables

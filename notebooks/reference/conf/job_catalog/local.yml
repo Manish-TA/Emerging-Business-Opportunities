@@ -4,22 +4,8 @@ jobs:
     stages:
       - name: "fetching data"
         tasks:
-          - name: "fetch-data"
-            params:
-              housing_url : https://raw.githubusercontent.com/ageron/handson-ml/master/datasets/housing/housing.tgz
-              housing_path : ${core.data_base_path}/raw/housing/
-
-      - name: "clean-base-tables"
-        tasks:
-          - name: "housing"
+          - name: "clean-fnb"
             params: {}
-
-      - name: "train-test-split"
-        tasks:
-          - name: "train-test"
-            params:
-              target: median_house_value
-              test_size: 0.2
 
   - name: feat-engg
     __tracker_experiment_name: Mlflow-tracker
@@ -36,6 +22,13 @@ jobs:
   - name: model-gen
     __tracker_experiment_name: Mlflow-tracker
     stages:
+      - name: "train-test-split"
+        tasks:
+          - name: "train-test"
+            params:
+              target: sales_dollars_value
+              test_size: 0.3
+              claim_id: 8
       - name: "model-creation"
         tasks:
           - name: "train-model"
