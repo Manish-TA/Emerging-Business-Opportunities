@@ -13,9 +13,11 @@ Client will provide the following data for the project:
 ●	Google Search Data – Search volume of the Theme    
 ●	Theme_Product_List – Product to theme Mapping    
 ●	Product_Manufacturer_List – Product to Manufacturer Mapping   
-●	Theme List – Theme Names   
+●	Theme List – Theme Names     
 
-The data is present in data/raw.
+Please find the data here: https://drive.google.com/drive/folders/1Xxs1WHk9fthWLPttuowEiZ3XOuMx2XCg?usp=sharing     
+
+The data should be placed in data/raw folder.
 
 Company will also provide a clear and detailed description of the dataset including all the fields present. Company will make available knowledgeable personnel to provide any necessary background on data and business context. These personnel will also help Tiger in working with the end consumers of our models and identifying which features could be actionable. They would also help in corroborating findings from the models and can help provide an insider’s business perspective.
 

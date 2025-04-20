@@ -1,0 +1,6 @@
+ta\_lib.regression.api.SKLStatsmodelOLS.get\_metadata\_routing
+==============================================================
+
+.. currentmodule:: ta_lib.regression.api
+
+.. automethod:: SKLStatsmodelOLS.get_metadata_routing
